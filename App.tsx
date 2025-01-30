@@ -51,9 +51,19 @@ export default function App() {
     try {
       const savedContacts = await AsyncStorage.getItem('contacts');
       if (savedContacts) {
-        setContacts([...JSON.parse(savedContacts), ...defaultContacts]);
+        // Parse saved contacts and ensure no duplicates with default contacts
+        const parsedSavedContacts = JSON.parse(savedContacts);
+        const existingIds = new Set(parsedSavedContacts.map((contact: Contact) => contact.id));
+        
+        // Only add default contacts that don't already exist
+        const uniqueDefaultContacts = defaultContacts.filter(
+          contact => !existingIds.has(contact.id)
+        );
+        
+        setContacts([...parsedSavedContacts, ...uniqueDefaultContacts]);
       } else {
-        await AsyncStorage.setItem('contacts', JSON.stringify(defaultContacts));
+        // First time loading - just use default contacts
+        await AsyncStorage.setItem('contacts', JSON.stringify([]));
         setContacts(defaultContacts);
       }
     } catch (error) {
@@ -259,8 +269,9 @@ const styles = StyleSheet.create({
   contactCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    marginVertical: 5,
+    paddingHorizontal: 16,
+    paddingVertical: 35,
+    marginVertical:20,
     marginHorizontal: 15,
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -281,7 +292,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#000', // Changed text color to be more visible against the gradient
+    color: '#000', 
     fontSize: 18,
     fontWeight: 'bold',
   },
